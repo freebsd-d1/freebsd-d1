@@ -1,0 +1,12 @@
+[submodule "sun20i_d1_spl"]
+	path = sun20i_d1_spl
+	url = https://github.com/jcassette/sun20i_d1_spl
+	branch = make-bsd
+[submodule "opensbi"]
+	path = opensbi
+	url = https://github.com/smaeul/opensbi
+	branch = d1-wip
+[submodule "u-boot"]
+	path = u-boot
+	url = https://github.com/smaeul/u-boot
+	branch = d1-wip
