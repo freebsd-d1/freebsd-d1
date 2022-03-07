@@ -1,12 +1,17 @@
 #!/bin/sh
 
-
-
-#dd if=/dev/zero of=licheerv.img bs=1M count=200
-#md=`mdconfig licheerv.img`
-#gpart create -s mbr $md
-#gpart add -t fat32 -b 20m -s 54m $md
-#gpart add -t freebsd $md
+img_create() {
+	img=$1
+	#dd if=/dev/zero of=$img bs=1M count=4096
+	dd if=/dev/zero of=$img bs=1M count=200
+	md=`mdconfig $img`
+	gpart create -s gpt $md
+	gpart add -t efi -b 20m -s 54m $md
+	gpart add -t freebsd-ufs $md
+	newfs_msdos -F 32 -L EFISYS -c 1 /dev/${md}p1
+	newfs -L rootfs /dev/${md}p2
+	mdconfig -d -u $md
+}
 
 uboot_build() {
 	pushd sun20i_d1_spl
@@ -43,22 +48,36 @@ uboot_install() {
 }
 
 freebsd_build() {
-	#sh /usr/src/release/release.sh -c LICHEERV.conf
+	destdir=$PWD/root
 	pushd freebsd-src
-	make CROSS_TOOLCHAIN=riscv64-gcc9 TARGET_ARCH=riscv64 buildworld
-	make CROSS_TOOLCHAIN=riscv64-gcc9 TARGET_ARCH=riscv64 buildkernel
+	make TARGET_ARCH=riscv64 buildworld
+	make TARGET_ARCH=riscv64 buildkernel
+	make TARGET_ARCH=riscv64 DESTDIR=$destdir installworld
+	make TARGET_ARCH=riscv64 DESTDIR=$destdir distribution
+	make TARGET_ARCH=riscv64 DESTDIR=$destdir installkernel
 	popd
 }
 
 freebsd_install() {
+	md=`mdconfig $1`
+	mnt=`mktemp -d`
+	mount -t msdos /dev/${md}p1 $mnt
+	mkdir -p $mnt/EFI/BOOT
+	cp root/boot/loader.efi $mnt/EFI/BOOT/BOOTRISCV64.EFI
+	umount $mnt
+	mount /dev/${md}p2 $mnt
+	#tar -c -f - -C root . | tar -x -f - -C $mnt
+	tar -c -f - -C root boot | tar -x -f - -C $mnt
+	umount $mnt
+	mdconfig -d -u $md
 }
 
 rescue_build() {
-	makefs -s 20m rescue.ufs /scratch/etc/mtree/BSD.root.dist
+	makefs -s 20m rescue.ufs root/etc/mtree/BSD.root.dist
 	md=`mdconfig rescue.ufs`
 	mnt=`mktemp -d`
 	mount /dev/$md $mnt
-	tar -c -f - -C /scratch rescue | tar -x -f - -C $mnt
+	tar -c -f - -C root rescue | tar -x -f - -C $mnt
 	ln -s -F /rescue $mnt/bin
 	ln -s -F /rescue $mnt/sbin
 	umount $mnt
@@ -84,10 +103,14 @@ main() {
 	pkg install riscv64-gcc9 riscv64-none-elf-gcc python3 bison swig py38-setuptools
 }
 
-img=FreeBSD-13.0-RELEASE-riscv-riscv64-LICHEERV.img
-xz -d -c /scratch/R/$img.xz > $img
+#img=FreeBSD-13.0-RELEASE-riscv-riscv64-LICHEERV.img
+#xz -d -c /scratch/R/$img.xz > $img
 #uboot_build
-uboot_install $img
+#rootfs_build
+img=licheerv.img
 rescue_build
+img_create $img
+uboot_install $img
+freebsd_install $img
 rescue_install $img
 
