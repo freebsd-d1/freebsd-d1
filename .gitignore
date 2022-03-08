@@ -1,0 +1,7 @@
+*.swp
+efisys*
+*.img
+mfsroot*
+root/
+rootfs*
+*.toc1
