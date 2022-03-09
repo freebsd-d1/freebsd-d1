@@ -10,3 +10,7 @@
 	path = u-boot
 	url = https://github.com/smaeul/u-boot
 	branch = d1-wip
+[submodule "freebsd-src"]
+	path = freebsd-src
+	url = https://github.com/jcassette/freebsd-src
+	branch = sun20i-d1

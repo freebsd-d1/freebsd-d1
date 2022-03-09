@@ -1,8 +1,8 @@
-
-
-all: licheerv.img
+# Copyright 2022 Julien Cassette <julien.cassette@gmail.com>
 
 MD := md99
+
+all: licheerv.img
 
 sun20i_d1_spl/nboot/boot0_sdcard_sun20iw1p1.bin:
 	gmake -C sun20i_d1_spl CROSS_COMPILE=riscv64-none-elf- CFG_USE_MAEE=n p=sun20iw1p1 mmc
