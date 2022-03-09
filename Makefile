@@ -22,10 +22,11 @@ mfsroot.ufs:
 	mkdir -p mfsroot
 	mtree -d -e -U -f root/etc/mtree/BSD.root.dist -p mfsroot
 	tar -c -f - -C root rescue | tar -x -f - -C mfsroot
-	ln -s -f /rescue mfsroot/bin
-	ln -s -f /rescue mfsroot/sbin
-	mkdir -p mfsroot/usr/sbin
-	cp root/usr/sbin/watchdog* mfsroot/usr/sbin
+	ln -s -F /rescue mfsroot/bin
+	ln -s -F /rescue mfsroot/sbin
+	tar -c -f - -C root lib | tar -x -f - -C mfsroot
+	tar -c -f - -C root libexec | tar -x -f - -C mfsroot
+	tar -c -f - -C root usr/sbin/watchdog | tar -x -f - -C mfsroot
 	makefs -t ffs -R 10m -o label=mfsroot mfsroot.ufs mfsroot
 
 rootfs.ufs: mfsroot.ufs
