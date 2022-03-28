@@ -4,6 +4,11 @@ MD := md99
 
 all: licheerv.img
 
+clean:
+	-chflags -R noschg efisys mfsroot rootfs
+	-rm -rf efisys mfsroot rootfs
+	-rm -f efisys.fat mfsroot.ufs rootfs.ufs licheerv.img
+
 sun20i_d1_spl/nboot/boot0_sdcard_sun20iw1p1.bin:
 	gmake -C sun20i_d1_spl CROSS_COMPILE=riscv64-none-elf- CFG_USE_MAEE=n p=sun20iw1p1 mmc
 
