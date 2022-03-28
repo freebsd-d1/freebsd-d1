@@ -13,4 +13,4 @@
 [submodule "freebsd-src"]
 	path = freebsd-src
 	url = https://github.com/jcassette/freebsd-src
-	branch = sun20i-d1
+	branch = sun20i-d1/main
