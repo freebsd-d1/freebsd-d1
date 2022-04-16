@@ -1,16 +1,16 @@
 [submodule "sun20i_d1_spl"]
 	path = sun20i_d1_spl
-	url = https://github.com/jcassette/sun20i_d1_spl
-	branch = make-bsd
+	url = ssh://git@github.com/jcassette/sun20i_d1_spl.git
+	branch = freebsd
 [submodule "opensbi"]
 	path = opensbi
-	url = https://github.com/smaeul/opensbi
+	url = ssh://git@github.com/jcassette/opensbi-d1.git
 	branch = d1-wip
 [submodule "u-boot"]
 	path = u-boot
-	url = https://github.com/smaeul/u-boot
+	url = ssh://git@github.com/jcassette/u-boot-d1.git
 	branch = d1-wip
 [submodule "freebsd-src"]
 	path = freebsd-src
-	url = https://github.com/jcassette/freebsd-src
+	url = ssh://git@github.com/jcassette/freebsd-src.git
 	branch = sun20i-d1/main
