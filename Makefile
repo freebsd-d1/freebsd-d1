@@ -51,10 +51,15 @@ licheerv.img: u-boot.toc1
 licheerv.img: efisys.fat
 licheerv.img: rootfs.ufs
 licheerv.img:
-	mkimg -s gpt -p efi:=efisys.fat:20m -p freebsd-ufs:=rootfs.ufs -o licheerv.img.tmp
+	dd if=/dev/zero of=licheerv.img.tmp bs=1m count=320
 	mdconfig -u $(MD) licheerv.img.tmp
+	gpart create -s gpt $(MD)
+	gpart add -t efi -b 20m -s 50m $(MD)
+	gpart add -t freebsd-ufs $(MD)
 	dd if=sun20i_d1_spl/nboot/boot0_sdcard_sun20iw1p1.bin of=/dev/$(MD) bs=512 seek=256 conv=notrunc
 	dd if=u-boot.toc1 of=/dev/$(MD) bs=512 seek=32800 conv=notrunc
+	dd if=efisys.fat of=/dev/$(MD)p1 bs=1m conv=notrunc
+	dd if=rootfs.ufs of=/dev/$(MD)p2 bs=1m conv=notrunc
 	mdconfig -d -u $(MD)
 	mv licheerv.img.tmp licheerv.img
 
