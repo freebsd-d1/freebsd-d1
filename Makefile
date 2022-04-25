@@ -2,6 +2,8 @@
 
 MD := md99
 
+.PHONY: all clean spl u-boot opensbi
+
 all: licheerv.img
 
 clean:
@@ -9,14 +11,21 @@ clean:
 	-rm -rf efisys mfsroot rootfs
 	-rm -f efisys.fat mfsroot.ufs rootfs.ufs licheerv.img
 
-sun20i_d1_spl/nboot/boot0_sdcard_sun20iw1p1.bin:
+spl:
 	gmake -C sun20i_d1_spl CROSS_COMPILE=riscv64-none-elf- CFG_USE_MAEE=n p=sun20iw1p1 mmc
 
-u-boot.toc1:
+opensbi:
 	gmake -C opensbi CROSS_COMPILE=riscv64-none-elf- PLATFORM=generic FW_PIC=y
+
+u-boot/.config:
 	gmake -C u-boot CROSS_COMPILE=riscv64-none-elf- lichee_rv_defconfig
+
+u-boot: u-boot/.config
+u-boot:
 	gmake -C u-boot CROSS_COMPILE=riscv64-none-elf-
-	u-boot/tools/mkimage -T sunxi_toc1 -d toc1.cfg u-boot.toc1
+
+toc1.bin: opensbi u-boot toc1.cfg
+	u-boot/tools/mkimage -T sunxi_toc1 -d toc1.cfg toc1.bin
 
 efisys.fat:
 	mkdir -p efisys/EFI/BOOT
@@ -32,6 +41,7 @@ mfsroot.ufs:
 	tar -c -f - -C root lib | tar -x -f - -C mfsroot
 	tar -c -f - -C root libexec | tar -x -f - -C mfsroot
 	tar -c -f - -C root usr/sbin/watchdog | tar -x -f - -C mfsroot
+	-tar -c -f - -C root boot/kernel/aw_mmc.ko | tar -x -f - -C mfsroot
 	makefs -t ffs -R 10m -o label=mfsroot mfsroot.ufs mfsroot
 
 rootfs.ufs: mfsroot.ufs
@@ -46,18 +56,14 @@ rootfs.ufs:
 	echo 'vfs.root.mountfrom="ufs:/dev/md0"' >> rootfs/boot/loader.conf
 	makefs -t ffs -R 10m -o label=rootfs rootfs.ufs rootfs
 
-licheerv.img: sun20i_d1_spl/nboot/boot0_sdcard_sun20iw1p1.bin
-licheerv.img: u-boot.toc1
-licheerv.img: efisys.fat
-licheerv.img: rootfs.ufs
-licheerv.img:
+licheerv.img: spl toc1.bin efisys.fat rootfs.ufs
 	dd if=/dev/zero of=licheerv.img.tmp bs=1m count=320
 	mdconfig -u $(MD) licheerv.img.tmp
 	gpart create -s gpt $(MD)
 	gpart add -t efi -b 20m -s 50m $(MD)
 	gpart add -t freebsd-ufs $(MD)
 	dd if=sun20i_d1_spl/nboot/boot0_sdcard_sun20iw1p1.bin of=/dev/$(MD) bs=512 seek=256 conv=notrunc
-	dd if=u-boot.toc1 of=/dev/$(MD) bs=512 seek=32800 conv=notrunc
+	dd if=toc1.bin of=/dev/$(MD) bs=512 seek=32800 conv=notrunc
 	dd if=efisys.fat of=/dev/$(MD)p1 bs=1m conv=notrunc
 	dd if=rootfs.ufs of=/dev/$(MD)p2 bs=1m conv=notrunc
 	mdconfig -d -u $(MD)

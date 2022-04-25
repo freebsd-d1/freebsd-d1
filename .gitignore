@@ -1,7 +1,9 @@
 *.swp
-efisys*
+*.fat
 *.img
-mfsroot*
-root/
-rootfs*
-*.toc1
+*.ufs
+*.bin
+/efisys/
+/mfsroot/
+/root/
+/rootfs/
