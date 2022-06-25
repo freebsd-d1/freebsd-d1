@@ -49,7 +49,7 @@ rootfs.ufs:
 	mkdir -p rootfs
 	tar -c -f - -C root boot | tar -x -f - -C rootfs
 	cp mfsroot.ufs rootfs
-	echo > rootfs/boot/loader.conf
+	echo 'boot_verbose="YES"' > rootfs/boot/loader.conf
 	echo 'rootfs_load="YES"' >> rootfs/boot/loader.conf
 	echo 'rootfs_name="/mfsroot.ufs"' >> rootfs/boot/loader.conf
 	echo 'rootfs_type="mfs_root"' >> rootfs/boot/loader.conf
