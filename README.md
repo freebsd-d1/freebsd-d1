@@ -1,4 +1,4 @@
-# FreeBSD on Sipeed Lichee RV
+# FreeBSD on Allwinner D1
 
 ## Usage
 
@@ -8,6 +8,6 @@ make -C freebsd-src TARGET_ARCH=riscv64 SRCCONF=$PWD/src.conf buildworld buildke
 make -C freebsd-src TARGET_ARCH=riscv64 SRCCONF=$PWD/src.conf DESTDIR=$PWD/root installworld distribution installkernel
 pkg install riscv64-none-elf-gcc python3 bison swig py38-setuptools
 gmake
-dd if=licheerv.img of=/dev/mmc0
+dd if=freebsd-d1.img of=/dev/mmc0
 ```
 

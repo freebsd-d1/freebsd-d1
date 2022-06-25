@@ -4,12 +4,12 @@ MD := md99
 
 .PHONY: all clean spl u-boot opensbi
 
-all: licheerv.img
+all: freebsd-d1.img
 
 clean:
 	-chflags -R noschg efisys mfsroot rootfs
 	-rm -rf efisys mfsroot rootfs
-	-rm -f efisys.fat mfsroot.ufs rootfs.ufs licheerv.img
+	-rm -f efisys.fat mfsroot.ufs rootfs.ufs freebsd-d1.img
 
 spl:
 	gmake -C sun20i_d1_spl CROSS_COMPILE=riscv64-none-elf- CFG_USE_MAEE=n p=sun20iw1p1 mmc
@@ -56,9 +56,9 @@ rootfs.ufs:
 	echo 'vfs.root.mountfrom="ufs:/dev/md0"' >> rootfs/boot/loader.conf
 	makefs -t ffs -R 10m -o label=rootfs rootfs.ufs rootfs
 
-licheerv.img: spl toc1.bin efisys.fat rootfs.ufs
-	dd if=/dev/zero of=licheerv.img.tmp bs=1m count=320
-	mdconfig -u $(MD) licheerv.img.tmp
+freebsd-d1.img: spl toc1.bin efisys.fat rootfs.ufs
+	dd if=/dev/zero of=freebsd-d1.img.tmp bs=1m count=320
+	mdconfig -u $(MD) freebsd-d1.img.tmp
 	gpart create -s gpt $(MD)
 	gpart add -t efi -b 20m -s 50m $(MD)
 	gpart add -t freebsd-ufs $(MD)
@@ -67,5 +67,5 @@ licheerv.img: spl toc1.bin efisys.fat rootfs.ufs
 	dd if=efisys.fat of=/dev/$(MD)p1 bs=1m conv=notrunc
 	dd if=rootfs.ufs of=/dev/$(MD)p2 bs=1m conv=notrunc
 	mdconfig -d -u $(MD)
-	mv licheerv.img.tmp licheerv.img
+	mv freebsd-d1.img.tmp freebsd-d1.img
 
