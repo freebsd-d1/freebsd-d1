@@ -11,7 +11,7 @@
 	url = ssh://git@github.com/freebsd-d1/u-boot.git
 	branch = d1-wip
 [submodule "freebsd-src"]
-	path = freebsd-src
+	path = freebsd/src
 	url = ssh://git@github.com/freebsd-d1/freebsd-src.git
 	branch = d1/main
 
