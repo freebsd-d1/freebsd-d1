@@ -2,9 +2,9 @@
 
 MD := md99
 
-.PHONY: all clean spl u-boot opensbi
+.PHONY: all clean spl u-boot opensbi freebsd image
 
-all: freebsd-d1.img
+all: freebsd image
 
 clean:
 	-chflags -R noschg efisys mfsroot rootfs
@@ -26,6 +26,12 @@ u-boot:
 
 toc1.bin: opensbi u-boot toc1.cfg
 	u-boot/tools/mkimage -T sunxi_toc1 -d toc1.cfg toc1.bin
+
+freebsd:
+	make -C freebsd-src CROSS_TOOLCHAIN=llvm14 TARGET_ARCH=riscv64 SRCCONF=../src.conf buildworld buildkernel
+	make -C freebsd-src CROSS_TOOLCHAIN=llvm14 TARGET_ARCH=riscv64 SRCCONF=../src.conf DESTDIR=../root installworld distribution installkernel
+
+image: freebsd-d1.img
 
 efisys.fat:
 	mkdir -p efisys/EFI/BOOT
