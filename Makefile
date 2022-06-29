@@ -19,9 +19,9 @@ MD := md99
 all: freebsd image
 
 clean:
-	-chflags -R noschg efisys mfsroot rootfs
-	-rm -rf efisys mfsroot rootfs
-	-rm -f efisys.fat mfsroot.ufs rootfs.ufs freebsd-d1.img
+	-chflags -R noschg efisys mfsroot bootfs
+	-rm -rf efisys mfsroot bootfs
+	-rm -f efisys.fat mfsroot.ufs bootfs.ufs freebsd-d1.img
 
 spl:
 	gmake -C sun20i_d1_spl CROSS_COMPILE=riscv64-none-elf- CFG_USE_MAEE=n p=sun20iw1p1 mmc
@@ -71,24 +71,24 @@ mfsroot.ufs:
 	ln -s -F /rescue mfsroot/sbin
 	makefs -t ffs -R 10m -o label=mfsroot mfsroot.ufs mfsroot
 
-rootfs.ufs: mfsroot.ufs
-rootfs.ufs:
-	mkdir -p rootfs
+bootfs.ufs: mfsroot.ufs
+bootfs.ufs:
+	mkdir -p bootfs
 	env -i \
 	    bmake -C freebsd/src \
 	    $(INSTALL_OPTS) \
 	    SUBDIR_OVERRIDE="stand" \
-	    DESTDIR=$(PWD)/rootfs \
+	    DESTDIR=$(PWD)/bootfs \
 	    install installkernel
-	cp mfsroot.ufs rootfs
-	echo 'boot_verbose="YES"' > rootfs/boot/loader.conf
-	echo 'rootfs_load="YES"' >> rootfs/boot/loader.conf
-	echo 'rootfs_name="/mfsroot.ufs"' >> rootfs/boot/loader.conf
-	echo 'rootfs_type="mfs_root"' >> rootfs/boot/loader.conf
-	echo 'vfs.root.mountfrom="ufs:/dev/md0"' >> rootfs/boot/loader.conf
-	makefs -t ffs -R 10m -o label=rootfs rootfs.ufs rootfs
+	cp mfsroot.ufs bootfs
+	echo 'boot_verbose="YES"' > bootfs/boot/loader.conf
+	echo 'rootfs_load="YES"' >> bootfs/boot/loader.conf
+	echo 'rootfs_name="/mfsroot.ufs"' >> bootfs/boot/loader.conf
+	echo 'rootfs_type="mfs_root"' >> bootfs/boot/loader.conf
+	echo 'vfs.root.mountfrom="ufs:/dev/md0"' >> bootfs/boot/loader.conf
+	makefs -t ffs -R 10m -o label=bootfs bootfs.ufs bootfs
 
-freebsd-d1.img: spl toc1.bin efisys.fat rootfs.ufs
+freebsd-d1.img: spl toc1.bin efisys.fat bootfs.ufs
 	dd if=/dev/zero of=freebsd-d1.img.tmp bs=1m count=320
 	mdconfig -u $(MD) freebsd-d1.img.tmp
 	gpart create -s gpt $(MD)
@@ -97,7 +97,7 @@ freebsd-d1.img: spl toc1.bin efisys.fat rootfs.ufs
 	dd if=sun20i_d1_spl/nboot/boot0_sdcard_sun20iw1p1.bin of=/dev/$(MD) bs=512 seek=256 conv=notrunc
 	dd if=toc1.bin of=/dev/$(MD) bs=512 seek=32800 conv=notrunc
 	dd if=efisys.fat of=/dev/$(MD)p1 bs=1m conv=notrunc
-	dd if=rootfs.ufs of=/dev/$(MD)p2 bs=1m conv=notrunc
+	dd if=bootfs.ufs of=/dev/$(MD)p2 bs=1m conv=notrunc
 	mdconfig -d -u $(MD)
 	mv freebsd-d1.img.tmp freebsd-d1.img
 

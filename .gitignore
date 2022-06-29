@@ -3,6 +3,6 @@
 *.img
 *.ufs
 *.bin
+/bootfs/
 /efisys/
 /mfsroot/
-/rootfs/
