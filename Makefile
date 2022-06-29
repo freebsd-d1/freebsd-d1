@@ -1,5 +1,17 @@
 # Copyright 2022 Julien Cassette <julien.cassette@gmail.com>
 
+COMMON_OPTS += OBJROOT=$(PWD)/freebsd/obj/
+COMMON_OPTS += SRCCONF=$(PWD)/src.conf
+
+BUILD_OPTS += $(COMMON_OPTS)
+BUILD_OPTS += CROSS_TOOLCHAIN=llvm14
+BUILD_OPTS += TARGET=riscv
+BUILD_OPTS += TARGET_ARCH=riscv64
+
+INSTALL_OPTS += $(COMMON_OPTS)
+INSTALL_OPTS += MACHINE=riscv
+INSTALL_OPTS += MACHINE_ARCH=riscv64
+
 MD := md99
 
 .PHONY: all clean spl u-boot opensbi freebsd image
@@ -29,37 +41,45 @@ toc1.bin: opensbi u-boot toc1.cfg
 
 freebsd:
 	env -i CCACHE_BASEDIR=$(PWD)/freebsd \
-	bmake -C freebsd/src \
-	OBJROOT=$(PWD)/freebsd/obj/ \
-	CROSS_TOOLCHAIN=llvm14 \
-	TARGET_ARCH=riscv64 \
-	SRCCONF=$(PWD)/src.conf \
-	DESTDIR=$(PWD)/root \
-	buildworld buildkernel installworld distribution installkernel
+	    bmake -C freebsd/src \
+	    $(BUILD_OPTS) \
+	    buildworld buildkernel
 
 image: freebsd-d1.img
 
 efisys.fat:
-	mkdir -p efisys/EFI/BOOT
-	cp root/boot/loader.efi efisys/EFI/BOOT/BOOTRISCV64.EFI
+	mkdir -p efisys/efi
+	env -i \
+	    bmake -C freebsd/src \
+	    $(INSTALL_OPTS) \
+	    SUBDIR_OVERRIDE="stand/efi/loader_4th" \
+	    DESTDIR=$(PWD)/efisys/efi \
+	    install
+	mv efisys/efi/boot/loader.efi efisys/efi/boot/bootriscv64.efi
+	rm efisys/efi/boot/loader*
 	makefs -t msdos -s 40m -o fat_type=32,sectors_per_cluster=1,volume_label=EFISYS efisys.fat efisys
 
 mfsroot.ufs:
 	mkdir -p mfsroot
-	mtree -d -e -U -f root/etc/mtree/BSD.root.dist -p mfsroot
-	tar -c -f - -C root rescue | tar -x -f - -C mfsroot
+	env -i \
+	    bmake -C freebsd/src \
+	    $(INSTALL_OPTS) \
+	    SUBDIR_OVERRIDE="lib libexec rescue usr.sbin/watchdogd" \
+	    DESTDIR=$(PWD)/mfsroot \
+	    installworld
 	ln -s -F /rescue mfsroot/bin
 	ln -s -F /rescue mfsroot/sbin
-	tar -c -f - -C root lib | tar -x -f - -C mfsroot
-	tar -c -f - -C root libexec | tar -x -f - -C mfsroot
-	tar -c -f - -C root usr/sbin/watchdog | tar -x -f - -C mfsroot
-	-tar -c -f - -C root boot/kernel/aw_mmc.ko | tar -x -f - -C mfsroot
 	makefs -t ffs -R 10m -o label=mfsroot mfsroot.ufs mfsroot
 
 rootfs.ufs: mfsroot.ufs
 rootfs.ufs:
 	mkdir -p rootfs
-	tar -c -f - -C root boot | tar -x -f - -C rootfs
+	env -i \
+	    bmake -C freebsd/src \
+	    $(INSTALL_OPTS) \
+	    SUBDIR_OVERRIDE="stand" \
+	    DESTDIR=$(PWD)/rootfs \
+	    install installkernel
 	cp mfsroot.ufs rootfs
 	echo 'boot_verbose="YES"' > rootfs/boot/loader.conf
 	echo 'rootfs_load="YES"' >> rootfs/boot/loader.conf

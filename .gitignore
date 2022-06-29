@@ -5,5 +5,4 @@
 *.bin
 /efisys/
 /mfsroot/
-/root/
 /rootfs/
