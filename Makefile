@@ -70,6 +70,7 @@ mfsroot.ufs:
 	echo 'hostname="freebsd-d1"' > mfsroot/etc/rc.conf
 	echo 'watchdogd_enable="YES"' >> mfsroot/etc/rc.conf
 	echo 'watchdogd_timeout="8"' >> mfsroot/etc/rc.conf
+	sed -i '' -e 's/^# REQUIRE: .*/# REQUIRE: root/' mfsroot/etc/rc.d/watchdogd
 	makefs -t ffs -R 10m -o label=mfsroot mfsroot.ufs mfsroot
 
 bootfs.ufs: mfsroot.ufs
