@@ -64,11 +64,12 @@ mfsroot.ufs:
 	env -i \
 	    bmake -C freebsd/src \
 	    $(INSTALL_OPTS) \
-	    SUBDIR_OVERRIDE="lib libexec rescue usr.sbin/watchdogd" \
+	    MK_BOOT=no \
 	    DESTDIR=$(PWD)/mfsroot \
-	    installworld
-	ln -s -F /rescue mfsroot/bin
-	ln -s -F /rescue mfsroot/sbin
+	    installworld distribution
+	echo 'hostname="freebsd-d1"' > mfsroot/etc/rc.conf
+	echo 'watchdogd_enable="YES"' >> mfsroot/etc/rc.conf
+	echo 'watchdogd_timeout="8"' >> mfsroot/etc/rc.conf
 	makefs -t ffs -R 10m -o label=mfsroot mfsroot.ufs mfsroot
 
 bootfs.ufs: mfsroot.ufs
