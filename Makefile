@@ -24,17 +24,17 @@ clean:
 	-rm -f efisys.fat mfsroot.ufs bootfs.ufs freebsd-d1.img
 
 spl:
-	gmake -C sun20i_d1_spl CROSS_COMPILE=riscv64-none-elf- CFG_USE_MAEE=n p=sun20iw1p1 mmc
+	$(MAKE) -C sun20i_d1_spl CROSS_COMPILE=riscv64-none-elf- CFG_USE_MAEE=n p=sun20iw1p1 mmc
 
 opensbi:
-	gmake -C opensbi CROSS_COMPILE=riscv64-none-elf- PLATFORM=generic FW_PIC=y
+	$(MAKE) -C opensbi CROSS_COMPILE=riscv64-none-elf- PLATFORM=generic FW_PIC=y
 
 u-boot/.config:
-	gmake -C u-boot CROSS_COMPILE=riscv64-none-elf- lichee_rv_defconfig
+	$(MAKE) -C u-boot CROSS_COMPILE=riscv64-none-elf- lichee_rv_defconfig
 
 u-boot: u-boot/.config
 u-boot:
-	gmake -C u-boot CROSS_COMPILE=riscv64-none-elf-
+	$(MAKE) -C u-boot CROSS_COMPILE=riscv64-none-elf-
 
 toc1.bin: opensbi u-boot toc1.cfg
 	u-boot/tools/mkimage -T sunxi_toc1 -d toc1.cfg toc1.bin
@@ -102,4 +102,3 @@ freebsd-d1.img: spl toc1.bin efisys.fat bootfs.ufs
 	dd if=bootfs.ufs of=/dev/$(MD)p2 bs=1m conv=notrunc
 	mdconfig -d -u $(MD)
 	mv freebsd-d1.img.tmp freebsd-d1.img
-
