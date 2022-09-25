@@ -3,7 +3,7 @@
 ## Usage
 
 ```
-# pkg install ccache llvm14 riscv64-none-elf-gcc python3 bison swig py38-setuptools
+# pkg install ccache llvm14 riscv64-none-elf-gcc python3 bison swig py39-setuptools
 # gmake
 # dd if=freebsd-d1.img of=/dev/mmc0
 ```
