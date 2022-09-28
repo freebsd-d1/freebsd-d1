@@ -64,9 +64,8 @@ mfsroot.ufs:
 	env -i \
 	    bmake -C freebsd/src \
 	    $(INSTALL_OPTS) \
-	    MK_BOOT=no \
 	    DESTDIR=$(PWD)/mfsroot \
-	    installworld distribution
+	    installworld distribution installkernel
 	echo 'hostname="freebsd-d1"' > mfsroot/etc/rc.conf
 	echo 'watchdogd_enable="YES"' >> mfsroot/etc/rc.conf
 	echo 'watchdogd_timeout="8"' >> mfsroot/etc/rc.conf
